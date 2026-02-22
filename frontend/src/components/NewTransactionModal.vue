@@ -127,6 +127,7 @@ import { useToast } from "vue-toastification";
 import { refreshTrigger } from '../store';
 import Swal from 'sweetalert2';
 import api from '../api';
+import { db } from '../services/offlineDb';
 
 const isOpen = ref(false);
 const loading = ref(false);
@@ -189,29 +190,32 @@ const submitTransaction = async () => {
 
   if (result.isConfirmed) {
     loading.value = true;
-    try {
-      const payload = {
-        description: form.value.description,
-        amount: Math.abs(parseFloat(form.value.amount)), 
-        wallet_id: form.value.wallet_id,
-        category_id: form.value.category_id,
-        type: form.value.type  
-      };
+    
+    const payload = {
+      description: form.value.description,
+      amount: Math.abs(parseFloat(form.value.amount)), 
+      wallet_id: form.value.wallet_id,
+      category_id: form.value.category_id,
+      type: form.value.type,
+      date: new Date().toISOString()
+    };
 
+    try {
       await api.post('/transactions/', payload);
-      
       toast.success("Lançamento salvo com sucesso!");
       isOpen.value = false;
-      
+    } catch (err) {
+      await db.transactions.add({
+        ...payload,
+        synced: false
+      });
+      toast.info("Você está offline! Salvo no dispositivo para sincronização.");
+      isOpen.value = false;
+    } finally {
       form.value.description = '';
       form.value.amount = '';
       form.value.type = 'expense'; 
-      
       refreshTrigger.value++;
-      
-    } catch (err) {
-      toast.error("Erro ao salvar: " + (err.response?.data?.detail || err.message));
-    } finally {
       loading.value = false;
     }
   }
