@@ -73,10 +73,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import api from '../api';
 import { useToast } from "vue-toastification";
 import Swal from 'sweetalert2';
+import { refreshTrigger } from '../store';
 import { 
   ShoppingBag, Utensils, Car, Zap, Gamepad2, 
   Home, Briefcase, HelpCircle, Trash2, Pencil 
@@ -105,6 +106,7 @@ const confirmDelete = async (id) => {
       await api.delete(`/transactions/${id}`);
       transactions.value = transactions.value.filter(t => t._id !== id);
       toast.success("Transação excluída!");
+      refreshTrigger.value++;
     } catch (err) {
       toast.error("Erro ao excluir.");
     }
@@ -145,6 +147,10 @@ const fetchTransactions = async () => {
     loading.value = false;
   }
 };
+
+watch(refreshTrigger, () => {
+  fetchTransactions();
+});
 
 onMounted(fetchTransactions);
 </script>

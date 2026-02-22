@@ -106,11 +106,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue'; 
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-vue-next';
 import { useToast } from "vue-toastification";
 import Swal from 'sweetalert2';
 import api from '../api';
+import { refreshTrigger } from '../store'; 
 
 const toast = useToast();
 const categories = ref([]);
@@ -185,6 +186,8 @@ const submitCategory = async () => {
       toast.success("Categoria criada com sucesso!");
     }
 
+    refreshTrigger.value++;
+    
     fetchCategories();
     closeModal();
   } catch (err) {
@@ -211,12 +214,19 @@ const deleteCategory = async (id, name) => {
     try {
       await api.delete(`/categories/${id}`);
       toast.success("Categoria excluída!");
+      
+      refreshTrigger.value++;
+      
       fetchCategories();
     } catch (err) {
       toast.error("Erro ao excluir.");
     }
   }
 };
+
+watch(refreshTrigger, () => {
+  fetchCategories();
+});
 
 onMounted(fetchCategories);
 </script>

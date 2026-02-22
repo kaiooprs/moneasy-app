@@ -68,8 +68,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import api from '../api';
+import { refreshTrigger } from '../store';
 import { 
   ArrowDownCircle, ArrowUpCircle, ShoppingBag, Utensils, 
   Car, Zap, Gamepad2, Home, Briefcase, HelpCircle 
@@ -123,6 +124,10 @@ const fetchData = async () => {
     loading.value = false;
   }
 };
+
+watch(refreshTrigger, () => {
+  fetchData();
+});
 
 onMounted(fetchData);
 </script>

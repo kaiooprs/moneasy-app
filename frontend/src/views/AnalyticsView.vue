@@ -85,11 +85,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { ShieldAlert, PieChart as PieChartIcon } from 'lucide-vue-next';
 import api from '../api';
+import { refreshTrigger } from '../store';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -163,6 +164,10 @@ const chartOptions = ref({
       }
     }
   }
+});
+
+watch(refreshTrigger, () => {
+  fetchAnalytics();
 });
 
 onMounted(fetchAnalytics);

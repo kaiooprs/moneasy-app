@@ -140,7 +140,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Plus, Wallet as WalletIcon, Pencil, Trash2, X } from 'lucide-vue-next';
 import { useToast } from "vue-toastification";
 import Swal from 'sweetalert2';
@@ -255,6 +255,10 @@ const deleteWallet = async (id, name) => {
     }
   }
 };
+
+watch(refreshTrigger, () => {
+  fetchWallets();
+});
 
 onMounted(fetchWallets);
 </script>

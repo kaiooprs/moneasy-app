@@ -121,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Plus, X, Check, ArrowUpCircle, ArrowDownCircle } from 'lucide-vue-next';
 import { useToast } from "vue-toastification";
 import { refreshTrigger } from '../store';
@@ -220,6 +220,10 @@ const submitTransaction = async () => {
     }
   }
 };
+
+watch(refreshTrigger, () => {
+  loadOptions();
+});
 
 onMounted(() => {
   loadOptions();

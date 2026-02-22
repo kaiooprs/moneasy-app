@@ -19,6 +19,7 @@ import TopBar from './components/TopBar.vue';
 import NewTransactionModal from './components/NewTransactionModal.vue';
 import { db } from './services/offlineDb';
 import api from './api';
+import { refreshTrigger } from './store';
 
 const syncOfflineData = async () => {
   try {
@@ -34,6 +35,8 @@ const syncOfflineData = async () => {
           await api.post('/transactions/', payloadReadyForRender);
           
           await db.transactions.delete(item.id);
+
+          refreshTrigger.value++;
           
           console.log('Sincronizado com sucesso:', item.description);
         } catch (apiError) {
