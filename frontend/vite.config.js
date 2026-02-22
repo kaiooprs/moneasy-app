@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import vue from '@vue/plugin-vue'
+import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
