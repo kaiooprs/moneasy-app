@@ -21,17 +21,28 @@ import { db } from './services/offlineDb';
 import api from './api';
 
 const syncOfflineData = async () => {
-  const offlineData = await db.transactions.where({ synced: false }).toArray();
+  try {
+    const allData = await db.transactions.toArray();
+        
+    const offlineData = allData.filter(item => item.synced === false);
 
-  if (offlineData.length > 0) {
-    for (const item of offlineData) {
-      try {
-        await api.post('/transactions/', item);
-        await db.transactions.delete(item.id);
-      } catch (e) {
-        console.error(e);
+    if (offlineData.length > 0) {
+      for (const item of offlineData) {
+        try {          
+          const { id, synced, ...payloadReadyForRender } = item;
+                    
+          await api.post('/transactions/', payloadReadyForRender);
+          
+          await db.transactions.delete(item.id);
+          
+          console.log('Sincronizado com sucesso:', item.description);
+        } catch (apiError) {
+          console.error('Falha na API ou Render ainda dormindo:', apiError);
+        }
       }
     }
+  } catch (dbError) {
+    console.error('Erro de leitura no banco local:', dbError);
   }
 };
 
