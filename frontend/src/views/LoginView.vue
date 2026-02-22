@@ -11,7 +11,7 @@
             v-model="username" 
             type="text" 
             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
-            placeholder="Ex: Kaio"
+            placeholder="Digite seu usuário"
             required
           />
         </div>

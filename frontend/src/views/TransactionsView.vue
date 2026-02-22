@@ -32,7 +32,7 @@
           
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center text-xl">
-              <span v-if="t.category_emoji">{{ t.category_emoji }}</span>
+              <span v-if="t.category_id?.icon">{{ t.category_id.icon }}</span>
               <component v-else :is="getCategoryIcon(t.category)" :size="18" class="text-gray-300" />
             </div>
             
@@ -86,48 +86,36 @@ const transactions = ref([]);
 const loading = ref(true);
 const toast = useToast();
 
-// --- Lógica de Ações ---
-
 const confirmDelete = async (id) => {
-
   const result = await Swal.fire({
     title: 'Tem certeza?',
-    text: "Você não poderá recuperar essa transação!",
+    text: "Esta ação não pode ser desfeita.",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#ef4444', // Vermelho (Tailwind red-500)
-    cancelButtonColor: '#374151', // Cinza (Tailwind gray-700)
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#374151',
     confirmButtonText: 'Sim, excluir!',
     cancelButtonText: 'Cancelar',
-    background: '#1f2937', // Fundo escuro (gray-800)
-    color: '#fff' // Texto branco
+    background: '#1f2937',
+    color: '#fff'
   });
 
   if (result.isConfirmed) {
     try {
       await api.delete(`/transactions/${id}`);
-      
-      // Remove da lista visualmente
       transactions.value = transactions.value.filter(t => t._id !== id);
-      
-      // 3. Notificação de Sucesso (Toast)
       toast.success("Transação excluída!");
-      
     } catch (err) {
-      toast.error("Erro ao excluir: " + err.message);
+      toast.error("Erro ao excluir.");
     }
   }
 };
 
 const editTransaction = (transaction) => {
-  // Por enquanto apenas um alerta, pois ainda vamos criar a tela de formulário
-  toast.info(`Em breve: Editar "${transaction.description}". Precisamos criar a tela de Formulário primeiro!`);
+  toast.info(`Funcionalidade de edição para "${transaction.description}" em breve.`);
 };
 
-// --- Utilitários Visuais ---
-
 const getCategoryIcon = (category) => {
-  // Mantemos esse fallback enquanto não temos a tela de criar categorias com emojis
   const map = {
     'alimentação': Utensils, 'food': Utensils,
     'transporte': Car, 'transport': Car,
@@ -146,15 +134,13 @@ const formatDate = (dateString) => {
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
 };
 
-// --- Busca de Dados ---
-
 const fetchTransactions = async () => {
   try {
     loading.value = true;
     const { data } = await api.get('/transactions/');
     transactions.value = data.sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (err) {
-    console.error("Erro ao buscar extrato", err);
+    console.error("Erro ao buscar extrato");
   } finally {
     loading.value = false;
   }

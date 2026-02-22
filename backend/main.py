@@ -12,25 +12,19 @@ from app.models.subscription import Subscription
 from app.routes.analytics import router as analytics_router
 
 async def reset_monthly_subscriptions():
-    print("🔄 Reiniciando ciclo de assinaturas para o novo mês...")
     await Subscription.find(Subscription.is_paid).update({"$set": {"is_paid": False}})
-    print("✅ Todas as assinaturas foram marcadas como 'Não Pagas'.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 Iniciando conexão com o MongoDB...")
     await init_db()
     
-    print("📅 Iniciando agendador de tarefas (Scheduler)...")
     scheduler = AsyncIOScheduler()
     scheduler.add_job(reset_monthly_subscriptions, 'cron', day=1, hour=0, minute=0)
     scheduler.start()
     
     yield
     
-    print("🛑 Encerrando agendador e conexões...")
     scheduler.shutdown()
-    print("✅ Backend Moneasy desligado com segurança.")
 
 app = FastAPI(
     title="Moneasy API",
@@ -56,8 +50,5 @@ app.include_router(analytics_router)
 @app.get("/")
 async def root():
     return {
-        "status": "online",
-        "app": "Moneasy",
-        "owner": "Remi",
-        "message": "Backend rodando perfeitamente!"
+        "status": "online"
     }

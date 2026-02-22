@@ -16,7 +16,7 @@ class CategoryIn(BaseModel):
 async def create_category(cat_in: CategoryIn, current_user: User = Depends(get_current_user)):
     """Cria uma nova categoria vinculada ao usuário logado."""
     new_category = Category(
-        **cat_in.dict(),
+        **cat_in.model_dump(),
         owner_id=current_user
     )
     await new_category.insert()
@@ -32,7 +32,7 @@ async def update_category(category_id: str, cat_in: CategoryIn, current_user: Us
     """Edita uma categoria existente (valida se o usuário é o dono)."""
     category = await Category.get(category_id)
     
-    if not category or category.owner_id.id != current_user.id:
+    if not category or category.owner_id.ref.id != current_user.id:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
     
     category.name = cat_in.name
@@ -47,7 +47,7 @@ async def delete_category(category_id: str, current_user: User = Depends(get_cur
     """Exclui uma categoria (valida se o usuário é o dono)."""
     category = await Category.get(category_id)
     
-    if not category or category.owner_id.id != current_user.id:
+    if not category or category.owner_id.ref.id != current_user.id:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
     
     await category.delete()

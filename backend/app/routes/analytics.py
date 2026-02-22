@@ -14,20 +14,17 @@ async def get_spending_by_category(
     year: int = Query(default=datetime.now().year),
     current_user: User = Depends(get_current_user)
 ):
-    """Retorna quanto foi gasto em cada categoria com correção de cursor para Python 3.13."""
-    # 1. Datas em UTC para o MongoDB
     start_date = datetime(year, month, 1, tzinfo=timezone.utc)
     if month == 12:
         end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     else:
         end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
 
-    # 2. Pipeline de agregação
     pipeline = [
         {
             "$match": {
-                # Beanie armazena Links como DBRefs, então usamos .id ou .$id
-                "owner_id.$id": current_user.id, 
+                "owner_id.$id": current_user.id,
+                "type": "expense",  
                 "date": {"$gte": start_date, "$lt": end_date}
             }
         },
@@ -41,12 +38,10 @@ async def get_spending_by_category(
         {"$sort": {"total": -1}}
     ]
 
-    # 3. BYPASS: Usamos a coleção bruta do Motor para evitar o bug do Beanie
     collection = Transaction.get_pymongo_collection()
-    cursor = collection.aggregate(pipeline) # Aqui não usamos await
-    results = await cursor.to_list(length=None) # Aqui usamos await no cursor direto
+    cursor = collection.aggregate(pipeline)
+    results = await cursor.to_list(length=None)
     
-    # 4. Resolução manual de categorias
     formatted = []
     for item in results:
         cat = await Category.get(item["_id"])
@@ -65,7 +60,6 @@ async def get_monthly_overview(
     year: int = Query(default=datetime.now().year),
     current_user: User = Depends(get_current_user)
 ):
-    """Resumo geral: Saldo total disponível vs. Gasto total do mês."""
     wallets = await Wallet.find(Wallet.owner_id.id == current_user.id).to_list()
     total_disponivel = sum(w.balance for w in wallets if w.type == WalletType.CORRENTE)
     
@@ -77,6 +71,7 @@ async def get_monthly_overview(
 
     gastos = await Transaction.find(
         Transaction.owner_id.id == current_user.id,
+        Transaction.type == "expense",  
         Transaction.date >= start_date,
         Transaction.date < end_date
     ).to_list()
@@ -91,12 +86,8 @@ async def get_monthly_overview(
         "transaction_count": len(gastos)
     }
     
-    
 @router.get("/emergency-reserve")
 async def get_emergency_reserve_progress(current_user: User = Depends(get_current_user)):
-    """
-    Calcula o progresso da reserva de emergência (contas POUPANCA).
-    """
     savings_wallets = await Wallet.find(
         Wallet.owner_id.id == current_user.id,
         Wallet.type == WalletType.POUPANCA

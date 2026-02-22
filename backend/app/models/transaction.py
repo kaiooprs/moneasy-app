@@ -1,6 +1,7 @@
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
+from typing import Literal
 from app.models.user import User
 from app.models.wallet import Wallet
 from app.models.category import Category
@@ -10,10 +11,12 @@ class TransactionCreate(BaseModel):
     amount: float
     wallet_id: str 
     category_id: str
+    type: Literal["income", "expense"] 
 
 class Transaction(Document):
     description: str
     amount: float
+    type: Literal["income", "expense"]  
     wallet_id: Link[Wallet]
     owner_id: Link[User]
     category_id: Link[Category]

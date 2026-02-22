@@ -15,5 +15,5 @@
 <script setup>
 import BottomNav from './components/BottomNav.vue';
 import TopBar from './components/TopBar.vue';
-import NewTransactionModal from './components/NewTransactionModal.vue'; // Importe aqui
+import NewTransactionModal from './components/NewTransactionModal.vue';
 </script>

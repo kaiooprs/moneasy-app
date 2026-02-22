@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white pt-20 pb-24 px-4">
+  <div class="min-h-screen bg-gray-900 text-white pt-5 pb-24 px-4">
     
     <div class="grid grid-cols-2 gap-3 mb-6">
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 shadow-sm relative overflow-hidden">
@@ -47,18 +47,19 @@
         class="bg-gray-800 p-4 rounded-2xl flex items-center justify-between border border-gray-700/50">
         
         <div class="flex items-center gap-3">
-          <div class="p-2 rounded-lg bg-gray-700 text-gray-300">
-            <component :is="getCategoryIcon(t.category)" :size="18" />
+          <div class="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center text-xl">
+             <span v-if="t.category_id?.icon">{{ t.category_id.icon }}</span>
+             <component v-else :is="getCategoryIcon(t.category)" :size="18" class="text-gray-300" />
           </div>
           <div>
-            <h3 class="font-bold text-sm">{{ t.description }}</h3>
+            <h3 class="font-bold text-sm text-gray-100">{{ t.description }}</h3>
             <p class="text-[10px] text-gray-400 capitalize">{{ formatDate(t.date) }}</p>
           </div>
         </div>
 
         <span class="font-bold font-mono text-sm" 
-          :class="t.amount < 0 ? 'text-red-400' : 'text-green-400'">
-          {{ t.amount < 0 ? '-' : '+' }} R$ {{ Math.abs(t.amount).toFixed(2) }}
+          :class="t.type === 'income' ? 'text-green-400' : 'text-red-400'">
+          {{ t.type === 'income' ? '+' : '-' }} R$ {{ Math.abs(t.amount).toFixed(2) }}
         </span>
       </div>
     </div>
@@ -77,25 +78,22 @@ import {
 const transactions = ref([]);
 const loading = ref(true);
 
-// Filtra e calcula totais
 const monthExpense = computed(() => {
   return transactions.value
-    .filter(t => t.amount < 0)
+    .filter(t => t.type === 'expense')
     .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 });
 
 const monthIncome = computed(() => {
   return transactions.value
-    .filter(t => t.amount > 0)
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter(t => t.type === 'income')
+    .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 });
 
-// Pega só as 5 últimas para exibir
 const recentTransactions = computed(() => {
   return transactions.value.slice(0, 5);
 });
 
-// --- Utilitários (Mesmos da TransactionsView) ---
 const getCategoryIcon = (category) => {
   const map = {
     'alimentação': Utensils, 'food': Utensils,
@@ -118,10 +116,9 @@ const formatDate = (dateString) => {
 const fetchData = async () => {
   try {
     const { data } = await api.get('/transactions/');
-    // Ordena por data (mais recente primeiro)
     transactions.value = data.sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (err) {
-    console.error("Erro ao carregar dashboard", err);
+    console.error("Erro ao carregar dashboard");
   } finally {
     loading.value = false;
   }

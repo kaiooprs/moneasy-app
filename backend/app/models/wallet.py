@@ -22,7 +22,7 @@ class Wallet(Document):
     type: WalletType = WalletType.CORRENTE
     goal: float = 0.0                      
     color: str = "#EAB308"
-    description: str = ""
+    description: str | None = None
     owner_id: Link[User]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

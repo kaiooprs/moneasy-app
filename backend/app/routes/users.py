@@ -11,16 +11,16 @@ class UserCreate(BaseModel):
     username: str
     password: str
 
+class UserUpdate(BaseModel):
+    full_name: str | None = None
+    profile_image: str | None = None
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate):
-    """
-    Cria um novo usuário. 
-    O e-mail é gerado automaticamente para simplificar o MVP.
-    """
     user_exists = await User.find_one(User.username == user_in.username)
     if user_exists:
         raise HTTPException(
@@ -39,10 +39,6 @@ async def register(user_in: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """
-    Rota de Login compatível com o botão 'Authorize' do Swagger.
-    Retorna um token JWT válido por 30 dias.
-    """
     user = await User.find_one(User.username == form_data.username)
     
     if not user or not verify_password(form_data.password, user.password_hash):
@@ -57,12 +53,28 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
-    """
-    Retorna os dados do usuário logado.
-    """
+    """Retorna os dados do usuário logado."""
     return {
         "id": str(current_user.id),
         "username": current_user.username,
         "email": current_user.email,
+        "full_name": current_user.full_name,          
+        "profile_image": current_user.profile_image,
         "created_at": current_user.created_at
+    }
+
+@router.put("/me")
+async def update_me(user_in: UserUpdate, current_user: User = Depends(get_current_user)):
+    """Atualiza o nome de exibição e a foto do usuário."""
+    if user_in.full_name is not None:
+        current_user.full_name = user_in.full_name
+    if user_in.profile_image is not None:
+        current_user.profile_image = user_in.profile_image
+        
+    await current_user.save()
+    
+    return {
+        "message": "Perfil atualizado com sucesso!",
+        "full_name": current_user.full_name,
+        "profile_image": current_user.profile_image
     }

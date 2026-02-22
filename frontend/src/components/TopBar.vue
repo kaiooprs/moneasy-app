@@ -27,24 +27,24 @@
       </p>
     </div>
 
-    </header>
+  </header>
   
   <div class="h-20"></div> 
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router'; // Importante para a navegação funcionar
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../api';
+import { refreshTrigger } from '../store';
 
-const router = useRouter(); // Inicializa o roteador
+const router = useRouter();
 const user = ref({ name: '', avatar: '' });
 const wallets = ref([]);
 
-// Lógica de Saldo: Soma tudo, MENOS o que tiver "Reserva" no nome
 const liquidBalance = computed(() => {
   return wallets.value.reduce((acc, wallet) => {
-    if (wallet.name.toLowerCase().includes('reserva')) {
+    if (wallet.type === 'poupanca') {
       return acc;
     }
     return acc + wallet.balance;
@@ -65,6 +65,10 @@ const fetchData = async () => {
     console.error("Erro ao carregar TopBar:", err);
   }
 };
+
+watch(refreshTrigger, () => {
+  fetchData();
+});
 
 onMounted(fetchData);
 </script>

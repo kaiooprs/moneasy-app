@@ -34,17 +34,10 @@ async def create_subscription(sub_in: SubscriptionCreate, current_user: User = D
 
 @router.get("/", response_model=List[Subscription])
 async def list_subscriptions(current_user: User = Depends(get_current_user)):
-    """
-    Lista as assinaturas resolvendo a categoria manualmente.
-    Evita o erro de cursor latente do Python 3.13.
-    """
-    # 1. Busca as assinaturas do dono
     subs = await Subscription.find(Subscription.owner_id.id == current_user.id).to_list()
     
-    # 2. Resolução Manual: Busca a categoria uma por uma
     for s in subs:
         if s.category_id:
-            # Buscamos o documento real da categoria usando o ID da referência
             s.category_id = await Category.get(s.category_id.ref.id)
             
     return subs
@@ -60,21 +53,19 @@ async def pay_subscription(sub_id: str, wallet_id: str, current_user: User = Dep
     if not wallet or wallet.owner_id.ref.id != current_user.id:
         raise HTTPException(status_code=404, detail="Carteira não encontrada")
 
-    # 1. Abate do saldo
     wallet.balance -= sub.amount
     await wallet.save()
 
-    # 2. Registra a transação automática
     new_expense = Transaction(
         description=f"Pagamento: {sub.name}",
         amount=sub.amount,
         wallet_id=wallet,
         owner_id=current_user,
-        category_id=sub.category_id
+        category_id=sub.category_id,
+        type="expense"
     )
     await new_expense.insert()
     
-    # 3. Marca como paga no mês (opcional, você pode resetar isso via cron depois)
     sub.is_paid = True
     await sub.save()
 
@@ -104,7 +95,6 @@ async def update_subscription(
     if not category:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
 
-    # Atualiza os dados básicos
     sub.name = sub_in.name
     sub.amount = sub_in.amount
     sub.due_day = sub_in.due_day
