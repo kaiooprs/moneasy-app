@@ -79,15 +79,29 @@ import {
 const transactions = ref([]);
 const loading = ref(true);
 
+const now = new Date();
+const currentMonth = now.getMonth();
+const currentYear = now.getFullYear();
+
 const monthExpense = computed(() => {
   return transactions.value
-    .filter(t => t.type === 'expense')
+    .filter(t => {
+      const d = new Date(t.date);
+      return t.type === 'expense' && 
+             d.getMonth() === currentMonth && 
+             d.getFullYear() === currentYear;
+    })
     .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 });
 
 const monthIncome = computed(() => {
   return transactions.value
-    .filter(t => t.type === 'income')
+    .filter(t => {
+      const d = new Date(t.date);
+      return t.type === 'income' && 
+             d.getMonth() === currentMonth && 
+             d.getFullYear() === currentYear;
+    })
     .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 });
 
