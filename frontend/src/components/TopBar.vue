@@ -16,7 +16,7 @@
       
       <div class="leading-tight">
         <p class="text-xs text-gray-400">Olá,</p>
-        <p class="text-sm font-bold text-white max-w-[100px] truncate">{{ user.name || 'Kaio' }}</p>
+        <p class="text-sm font-bold text-white max-w-[100px] truncate">{{ user.name || 'Usuário' }}</p>
       </div>
     </div>
 
